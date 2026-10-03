@@ -1,0 +1,176 @@
+{
+  "name": "Email Summarizer",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -528,
+        -400
+      ],
+      "id": "9e9cef0d-d2a1-49c9-95e8-42af040b12d4",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": true,
+        "filters": {
+          "receivedAfter": "={{ $now.minus({ hours: 24 }).toISO() }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -304,
+        -288
+      ],
+      "id": "cd36897b-155f-4366-9d61-0a10f9b12cef",
+      "name": "Get many messages",
+      "webhookId": "3a177c6e-2645-4e96-a6e5-49995dc2a046",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "jl9Eo7G5PuDnbwbL",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "include": "specifiedFields",
+        "fieldsToInclude": "Subject, From, To, Cc, snippet",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        -448
+      ],
+      "id": "27345d3a-ac3c-4985-beef-b6a8e1d06644",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.8-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.8-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Summarize the given emails in a clean, styled HTML format suitable for an email body. \nUse proper HTML tags like <h2>, <ul>, <li>, <strong>, <p> for formatting. \nDo NOT use markdown syntax (no asterisks or stars). \nInclude sender, subject, and a brief summary for each email.\n\nHere are the emails:\n{{ JSON.stringify($json.data) }}\n\nReturn ONLY the HTML content, no explanations, no markdown code blocks."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        160,
+        -112
+      ],
+      "id": "3c22de08-e44c-48f5-9d8f-a429bdb2fbc5",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IuGqWS1s4Cyy2gp1",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "your-email@example.com",
+        "subject": "=Daily Email Summary - {{ $now.format('dd MMM yyyy') }}",
+        "message": "={{ $json.content.parts[0].text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        544,
+        -288
+      ],
+      "id": "4e961786-79e9-4725-ae8f-59eec88ae999",
+      "name": "Send a message",
+      "webhookId": "1c5f7b88-a0f3-4c42-9a58-42159793febc",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "jl9Eo7G5PuDnbwbL",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}
