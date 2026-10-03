@@ -58,9 +58,12 @@ email-summarizer/
 └── images/
     └── workflow-screenshot.png
 ```
-## Author
+##  Author
+
 **Hithursan Navaretnarasa**
 
-<div align="center" font-wight=800> Crafted with ❤️ for the modern connoisseur</div> 
-
+---
+<div align="center" font-wight=800>
+Crafted with ❤️ for the modern connoisseu#
+</div>
     
